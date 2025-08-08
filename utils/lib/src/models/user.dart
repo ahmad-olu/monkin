@@ -126,7 +126,7 @@ class CreateUser {
 @immutable
 @JsonSerializable()
 class CreateUserRequest {
-  CreateUserRequest({
+  const CreateUserRequest({
     required this.email,
     required this.password,
     required this.role,

@@ -1,0 +1,1 @@
+const userTable = 'users';

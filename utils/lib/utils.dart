@@ -1,4 +1,4 @@
 /// A generic interface for utils
 library;
 
-export 'src/utils.dart';
+export 'src/models/models.dart';

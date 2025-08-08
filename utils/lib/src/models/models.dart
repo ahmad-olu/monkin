@@ -1,0 +1,10 @@
+export 'appointment.dart';
+export 'department.dart';
+export 'doctor_department.dart';
+export 'medical_record.dart';
+export 'medication.dart';
+export 'message.dart';
+export 'patient.dart';
+export 'patient_medication.dart';
+export 'treatment_plan.dart';
+export 'user.dart';
