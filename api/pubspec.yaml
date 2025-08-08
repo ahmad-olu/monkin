@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   dart_frog: ^1.1.0
+  equatable: ^2.0.7
 
 dev_dependencies:
   mocktail: ^1.0.3
