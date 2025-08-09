@@ -6,5 +6,6 @@ export 'medication.dart';
 export 'message.dart';
 export 'patient.dart';
 export 'patient_medication.dart';
+export 'surreal_query_result.dart';
 export 'treatment_plan.dart';
 export 'user.dart';

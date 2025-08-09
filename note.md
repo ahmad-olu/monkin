@@ -9,3 +9,6 @@ dart_frog new route "/hello/world"
 # 🛣️ Create a new middleware for the route "/hello/world"
 dart_frog new middleware "/hello/world"
 ```
+
+---
+
