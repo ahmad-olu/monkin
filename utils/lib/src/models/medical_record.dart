@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:equatable/equatable.dart';
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart' show immutable;
 
 part 'medical_record.g.dart';
@@ -10,13 +10,13 @@ part 'medical_record.g.dart';
 @JsonSerializable()
 class MedicalRecord extends Equatable {
   const MedicalRecord({
-    required this.id,
-    required this.patientId,
-    required this.doctorId,
     required this.chiefComplaint,
     required this.visitDate,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.patientId,
+    this.doctorId,
+    this.createdAt,
+    this.updatedAt,
     this.historyOfPresentIllness,
     this.physicalExamination,
     this.diagnosis,
@@ -26,9 +26,12 @@ class MedicalRecord extends Equatable {
     this.attachments,
   });
 
-  final String id;
-  final String patientId;
-  final String doctorId;
+  @JsonKey(includeIfNull: false)
+  final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? patientId;
+  @JsonKey(includeIfNull: false)
+  final String? doctorId;
   final String chiefComplaint;
   final String? historyOfPresentIllness;
   final String? physicalExamination;
@@ -38,8 +41,8 @@ class MedicalRecord extends Equatable {
   final String? notes;
   final List<String>? attachments;
   final DateTime visitDate;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   MedicalRecord copyWith({
     String? id,

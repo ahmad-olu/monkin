@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:equatable/equatable.dart';
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart' show immutable;
 
 part 'department.g.dart';
@@ -10,22 +10,24 @@ part 'department.g.dart';
 @JsonSerializable()
 class Department extends Equatable {
   const Department({
-    required this.id,
+    this.id,
+    // ignore: always_put_required_named_parameters_first
     required this.name,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
+    this.isActive,
+    this.createdAt,
+    this.updatedAt,
     this.description,
     this.headOfDepartment,
   });
 
-  final String id;
+  @JsonKey(includeIfNull: false)
+  final String? id;
   final String name;
   final String? description;
   final String? headOfDepartment;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool? isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Department copyWith({
     String? id,

@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:equatable/equatable.dart';
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart' show immutable;
 
 part 'medication.g.dart';
@@ -10,28 +10,29 @@ part 'medication.g.dart';
 @JsonSerializable()
 class Medication extends Equatable {
   const Medication({
-    required this.id,
     required this.name,
     required this.dosage,
     required this.form,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.isActive,
+    this.createdAt,
+    this.updatedAt,
     this.genericName,
     this.manufacturer,
     this.description,
   });
 
-  final String id;
+  @JsonKey(includeIfNull: false)
+  final String? id;
   final String name;
   final String? genericName;
   final String dosage;
   final String form;
   final String? manufacturer;
   final String? description;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool? isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Medication copyWith({
     String? id,

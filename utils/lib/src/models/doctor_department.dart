@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:equatable/equatable.dart';
-import 'package:json_annotation/json_annotation.dart' show JsonSerializable;
+import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart' show immutable;
 
 part 'doctor_department.g.dart';
@@ -10,18 +10,21 @@ part 'doctor_department.g.dart';
 @JsonSerializable()
 class DoctorDepartment extends Equatable {
   const DoctorDepartment({
-    required this.id,
-    required this.doctorId,
-    required this.departmentId,
-    required this.isPrimary,
-    required this.createdAt,
+    this.id,
+    this.doctorId,
+    this.departmentId,
+    this.isPrimary,
+    this.createdAt,
   });
 
-  final String id;
-  final String doctorId;
-  final String departmentId;
-  final bool isPrimary;
-  final DateTime createdAt;
+  @JsonKey(includeIfNull: false)
+  final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? doctorId;
+  @JsonKey(includeIfNull: false)
+  final String? departmentId;
+  final bool? isPrimary;
+  final DateTime? createdAt;
 
   DoctorDepartment copyWith({
     String? id,
@@ -50,7 +53,7 @@ class DoctorDepartment extends Equatable {
   }
 
   @override
-  List<Object> get props {
+  List<Object?> get props {
     return [
       id,
       doctorId,

@@ -7,14 +7,18 @@ part of 'message.dart';
 // **************************************************************************
 
 Message _$MessageFromJson(Map<String, dynamic> json) => Message(
-  id: json['id'] as String,
-  senderId: json['senderId'] as String,
   type: $enumDecode(_$MessageTypeEnumMap, json['type']),
   subject: json['subject'] as String,
   content: json['content'] as String,
-  status: $enumDecode(_$MessageStatusEnumMap, json['status']),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  id: json['id'] as String?,
+  senderId: json['senderId'] as String?,
+  status: $enumDecodeNullable(_$MessageStatusEnumMap, json['status']),
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
   scheduledFor: json['scheduledFor'] == null
       ? null
       : DateTime.parse(json['scheduledFor'] as String),
@@ -29,19 +33,19 @@ Message _$MessageFromJson(Map<String, dynamic> json) => Message(
 );
 
 Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
-  'id': instance.id,
-  'senderId': instance.senderId,
-  'recipientId': instance.recipientId,
-  'patientId': instance.patientId,
+  'id': ?instance.id,
+  'senderId': ?instance.senderId,
+  'recipientId': ?instance.recipientId,
+  'patientId': ?instance.patientId,
   'type': _$MessageTypeEnumMap[instance.type]!,
   'subject': instance.subject,
   'content': instance.content,
-  'status': _$MessageStatusEnumMap[instance.status]!,
+  'status': _$MessageStatusEnumMap[instance.status],
   'scheduledFor': instance.scheduledFor?.toIso8601String(),
   'sentAt': instance.sentAt?.toIso8601String(),
   'readAt': instance.readAt?.toIso8601String(),
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
+  'createdAt': instance.createdAt?.toIso8601String(),
+  'updatedAt': instance.updatedAt?.toIso8601String(),
 };
 
 const _$MessageTypeEnumMap = {

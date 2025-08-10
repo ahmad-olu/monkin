@@ -7,15 +7,19 @@ part of 'appointment.dart';
 // **************************************************************************
 
 Appointment _$AppointmentFromJson(Map<String, dynamic> json) => Appointment(
-  id: json['id'] as String,
-  patientId: json['patientId'] as String,
-  doctorId: json['doctorId'] as String,
   appointmentDate: DateTime.parse(json['appointmentDate'] as String),
   duration: Duration(microseconds: (json['duration'] as num).toInt()),
-  type: $enumDecode(_$AppointmentTypeEnumMap, json['type']),
-  status: $enumDecode(_$AppointmentStatusEnumMap, json['status']),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  id: json['id'] as String?,
+  patientId: json['patientId'] as String?,
+  doctorId: json['doctorId'] as String?,
+  type: $enumDecodeNullable(_$AppointmentTypeEnumMap, json['type']),
+  status: $enumDecodeNullable(_$AppointmentStatusEnumMap, json['status']),
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
   reason: json['reason'] as String?,
   notes: json['notes'] as String?,
   reminderSent: json['reminderSent'] as String?,
@@ -23,18 +27,18 @@ Appointment _$AppointmentFromJson(Map<String, dynamic> json) => Appointment(
 
 Map<String, dynamic> _$AppointmentToJson(Appointment instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'patientId': instance.patientId,
-      'doctorId': instance.doctorId,
+      'id': ?instance.id,
+      'patientId': ?instance.patientId,
+      'doctorId': ?instance.doctorId,
       'appointmentDate': instance.appointmentDate.toIso8601String(),
       'duration': instance.duration.inMicroseconds,
-      'type': _$AppointmentTypeEnumMap[instance.type]!,
-      'status': _$AppointmentStatusEnumMap[instance.status]!,
+      'type': _$AppointmentTypeEnumMap[instance.type],
+      'status': _$AppointmentStatusEnumMap[instance.status],
       'reason': instance.reason,
       'notes': instance.notes,
       'reminderSent': instance.reminderSent,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };
 
 const _$AppointmentTypeEnumMap = {

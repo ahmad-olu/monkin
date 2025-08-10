@@ -20,25 +20,26 @@ class User extends Equatable {
     required this.id,
     required this.email,
     required this.passwordHash,
-    required this.role,
     required this.firstName,
     required this.lastName,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
+    this.role,
+    this.isActive,
+    this.createdAt,
+    this.updatedAt,
     this.phone,
   });
 
+  @JsonKey(includeIfNull: false)
   final String id;
   final String email;
   final String passwordHash;
-  final UserRole role;
+  final UserRole? role;
   final String firstName;
   final String lastName;
   final String? phone;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final bool? isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   User copyWith({
     String? id,

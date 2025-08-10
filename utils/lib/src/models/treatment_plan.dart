@@ -17,10 +17,6 @@ enum TreatmentStatus {
 @JsonSerializable()
 class TreatmentPlan extends Equatable {
   const TreatmentPlan({
-    required this.id,
-    required this.patientId,
-    required this.doctorId,
-    required this.medicalRecordId,
     required this.title,
     required this.description,
     required this.startDate,
@@ -28,16 +24,24 @@ class TreatmentPlan extends Equatable {
     required this.goals,
     required this.medications,
     required this.instructions,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.patientId,
+    this.doctorId,
+    this.medicalRecordId,
+    this.createdAt,
+    this.updatedAt,
     this.endDate,
     this.notes,
   });
 
-  final String id;
-  final String patientId;
-  final String doctorId;
-  final String medicalRecordId;
+  @JsonKey(includeIfNull: false)
+  final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? patientId;
+  @JsonKey(includeIfNull: false)
+  final String? doctorId;
+  @JsonKey(includeIfNull: false)
+  final String? medicalRecordId;
   final String title;
   final String description;
   final DateTime startDate;
@@ -47,8 +51,8 @@ class TreatmentPlan extends Equatable {
   final List<String> medications;
   final List<String> instructions;
   final String? notes;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   TreatmentPlan copyWith({
     String? id,

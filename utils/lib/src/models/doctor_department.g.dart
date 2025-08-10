@@ -8,18 +8,20 @@ part of 'doctor_department.dart';
 
 DoctorDepartment _$DoctorDepartmentFromJson(Map<String, dynamic> json) =>
     DoctorDepartment(
-      id: json['id'] as String,
-      doctorId: json['doctorId'] as String,
-      departmentId: json['departmentId'] as String,
-      isPrimary: json['isPrimary'] as bool,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      id: json['id'] as String?,
+      doctorId: json['doctorId'] as String?,
+      departmentId: json['departmentId'] as String?,
+      isPrimary: json['isPrimary'] as bool?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
     );
 
 Map<String, dynamic> _$DoctorDepartmentToJson(DoctorDepartment instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'doctorId': instance.doctorId,
-      'departmentId': instance.departmentId,
+      'id': ?instance.id,
+      'doctorId': ?instance.doctorId,
+      'departmentId': ?instance.departmentId,
       'isPrimary': instance.isPrimary,
-      'createdAt': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
     };

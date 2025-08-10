@@ -8,10 +8,6 @@ part of 'treatment_plan.dart';
 
 TreatmentPlan _$TreatmentPlanFromJson(Map<String, dynamic> json) =>
     TreatmentPlan(
-      id: json['id'] as String,
-      patientId: json['patientId'] as String,
-      doctorId: json['doctorId'] as String,
-      medicalRecordId: json['medicalRecordId'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
@@ -23,8 +19,16 @@ TreatmentPlan _$TreatmentPlanFromJson(Map<String, dynamic> json) =>
       instructions: (json['instructions'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
+      id: json['id'] as String?,
+      patientId: json['patientId'] as String?,
+      doctorId: json['doctorId'] as String?,
+      medicalRecordId: json['medicalRecordId'] as String?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
       endDate: json['endDate'] == null
           ? null
           : DateTime.parse(json['endDate'] as String),
@@ -33,10 +37,10 @@ TreatmentPlan _$TreatmentPlanFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$TreatmentPlanToJson(TreatmentPlan instance) =>
     <String, dynamic>{
-      'id': instance.id,
-      'patientId': instance.patientId,
-      'doctorId': instance.doctorId,
-      'medicalRecordId': instance.medicalRecordId,
+      'id': ?instance.id,
+      'patientId': ?instance.patientId,
+      'doctorId': ?instance.doctorId,
+      'medicalRecordId': ?instance.medicalRecordId,
       'title': instance.title,
       'description': instance.description,
       'startDate': instance.startDate.toIso8601String(),
@@ -46,8 +50,8 @@ Map<String, dynamic> _$TreatmentPlanToJson(TreatmentPlan instance) =>
       'medications': instance.medications,
       'instructions': instance.instructions,
       'notes': instance.notes,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };
 
 const _$TreatmentStatusEnumMap = {

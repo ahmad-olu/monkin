@@ -27,32 +27,35 @@ enum AppointmentStatus {
 @JsonSerializable()
 class Appointment extends Equatable {
   const Appointment({
-    required this.id,
-    required this.patientId,
-    required this.doctorId,
     required this.appointmentDate,
     required this.duration,
-    required this.type,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.patientId,
+    this.doctorId,
+    this.type,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
     this.reason,
     this.notes,
     this.reminderSent,
   });
 
-  final String id;
-  final String patientId;
-  final String doctorId;
+  @JsonKey(includeIfNull: false)
+  final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? patientId;
+  @JsonKey(includeIfNull: false)
+  final String? doctorId;
   final DateTime appointmentDate;
   final Duration duration;
-  final AppointmentType type;
-  final AppointmentStatus status;
+  final AppointmentType? type;
+  final AppointmentStatus? status;
   final String? reason;
   final String? notes;
   final String? reminderSent;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Appointment copyWith({
     String? id,

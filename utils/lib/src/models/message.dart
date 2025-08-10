@@ -26,14 +26,14 @@ enum MessageStatus {
 @JsonSerializable()
 class Message extends Equatable {
   const Message({
-    required this.id,
-    required this.senderId,
     required this.type,
     required this.subject,
     required this.content,
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
+    this.id,
+    this.senderId,
+    this.status,
+    this.createdAt,
+    this.updatedAt,
     this.scheduledFor,
     this.sentAt,
     this.readAt,
@@ -41,19 +41,23 @@ class Message extends Equatable {
     this.patientId,
   });
 
-  final String id;
-  final String senderId;
+  @JsonKey(includeIfNull: false)
+  final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? senderId;
+  @JsonKey(includeIfNull: false)
   final String? recipientId;
+  @JsonKey(includeIfNull: false)
   final String? patientId;
   final MessageType type;
   final String subject;
   final String content;
-  final MessageStatus status;
+  final MessageStatus? status;
   final DateTime? scheduledFor;
   final DateTime? sentAt;
   final DateTime? readAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Message copyWith({
     String? id,
