@@ -109,3 +109,43 @@ class MedicalRecord extends Equatable {
     ];
   }
 }
+
+@immutable
+@JsonSerializable()
+class UpdateMedicalRecord {
+  const UpdateMedicalRecord({
+    this.chiefComplaint,
+    this.updatedAt,
+    this.historyOfPresentIllness,
+    this.physicalExamination,
+    this.diagnosis,
+    this.treatmentPlan,
+    this.medications,
+    this.notes,
+    this.attachments,
+  });
+
+  @JsonKey(includeIfNull: false)
+  final String? chiefComplaint;
+  @JsonKey(includeIfNull: false)
+  final String? historyOfPresentIllness;
+  @JsonKey(includeIfNull: false)
+  final String? physicalExamination;
+  @JsonKey(includeIfNull: false)
+  final String? diagnosis;
+  @JsonKey(includeIfNull: false)
+  final String? treatmentPlan;
+  @JsonKey(includeIfNull: false)
+  final String? medications;
+  @JsonKey(includeIfNull: false)
+  final String? notes;
+  @JsonKey(includeIfNull: false)
+  final List<String>? attachments;
+  @JsonKey(includeIfNull: false)
+  final DateTime? updatedAt;
+
+  factory UpdateMedicalRecord.fromJson(Map<String, dynamic> json) =>
+      _$UpdateMedicalRecordFromJson(json);
+
+  Map<String, dynamic> toJson() => _$UpdateMedicalRecordToJson(this);
+}

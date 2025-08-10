@@ -6,14 +6,13 @@ import 'package:bcrypt/bcrypt.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:surrealdb/surrealdb.dart';
 import 'package:utils/utils.dart'
-    show CreateUser, CreateUserRequest, User, UserRole;
+    show CreateUser, CreateUserRequest, SurrealQueryResult, User, UserRole;
 
 import '../../../consts/db_table.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   final request = context.request;
   final sdb = await context.read<Future<SurrealDB>>();
-  // return Response(statusCode: HttpStatus.methodNotAllowed)
 
   final method = request.method;
   if (method == HttpMethod.post) {
@@ -21,13 +20,18 @@ Future<Response> onRequest(RequestContext context) async {
       await request.formData().then((e) => e.fields),
     );
 
-    final check_user = await sdb
-        .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
-      'table': userTable,
-      'email': form.email,
-    }) as List?;
+    final checkUserQuery = await sdb
+            .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
+          'table': userTable,
+          'email': form.email,
+        }) as List? ??
+        [];
+    final checkUser = SurrealQueryResult<User>.fromJson(
+      checkUserQuery[0] as Map<String, dynamic>,
+      (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
+    ).result;
 
-    final resultList = check_user?.first.result as List;
+    final resultList = checkUser;
     if (resultList.isEmpty) {
       final passwordHash = BCrypt.hashpw(form.password, BCrypt.gensalt());
       final userData = CreateUser(
@@ -45,8 +49,8 @@ Future<Response> onRequest(RequestContext context) async {
           .create(userTable, userData)
           .then((e) => User.fromJson(e as Map<String, dynamic>? ?? {}));
 
-      // TODO: Send welcome email with login credentials
-      // TODO: Log user creation event
+      // To-do: Send welcome email with login credentials
+      // To-do: Log user creation event
     }
 
     return Response(

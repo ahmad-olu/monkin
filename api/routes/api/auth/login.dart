@@ -19,34 +19,40 @@ Future<Response> onRequest(RequestContext context) async {
     final email = form['email'];
     final password = form['password'];
 
-    final checkUser = await sdb
-        .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
-      'table': userTable,
-      'email': email,
-    }) as List?;
-    final first = checkUser?.first.result as List<User>;
+    final checkUserQuery = await sdb
+            .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
+          'table': userTable,
+          'email': email,
+        }) as List? ??
+        [];
+    final checkUser = SurrealQueryResult<User>.fromJson(
+      checkUserQuery[0] as Map<String, dynamic>,
+      (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
+    ).result;
 
-    if (first.isEmpty) {
-      return Response(statusCode: HttpStatus.internalServerError);
+    if (checkUser.isEmpty) {
+      return Response(statusCode: HttpStatus.unauthorized);
     }
 
-    final checkPassword = BCrypt.checkpw(password!, first.first.passwordHash);
+    final checkPassword =
+        BCrypt.checkpw(password!, checkUser.first.passwordHash);
     if (!checkPassword) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
 
     final jwt = JWT(
       {
-        'id': first.first.id,
+        'id': checkUser.first.id,
         'role': 'admin',
         'exp': const Duration(hours: 1),
       },
     );
     final token = jwt.sign(SecretKey('secret passphrase'));
-    // TODO: Log successful login attempt
+    // To-do: pass secret from .environment
+    // To-do: Log successful login attempt
 
     return Response(
-      body: json.encode({'access_token': token, 'data': first.first}),
+      body: json.encode({'access_token': token, 'data': checkUser.first}),
     );
   }
 

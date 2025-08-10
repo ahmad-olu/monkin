@@ -47,3 +47,34 @@ Map<String, dynamic> _$MedicalRecordToJson(MedicalRecord instance) =>
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
+
+UpdateMedicalRecord _$UpdateMedicalRecordFromJson(Map<String, dynamic> json) =>
+    UpdateMedicalRecord(
+      chiefComplaint: json['chiefComplaint'] as String?,
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
+      historyOfPresentIllness: json['historyOfPresentIllness'] as String?,
+      physicalExamination: json['physicalExamination'] as String?,
+      diagnosis: json['diagnosis'] as String?,
+      treatmentPlan: json['treatmentPlan'] as String?,
+      medications: json['medications'] as String?,
+      notes: json['notes'] as String?,
+      attachments: (json['attachments'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+    );
+
+Map<String, dynamic> _$UpdateMedicalRecordToJson(
+  UpdateMedicalRecord instance,
+) => <String, dynamic>{
+  'chiefComplaint': ?instance.chiefComplaint,
+  'historyOfPresentIllness': ?instance.historyOfPresentIllness,
+  'physicalExamination': ?instance.physicalExamination,
+  'diagnosis': ?instance.diagnosis,
+  'treatmentPlan': ?instance.treatmentPlan,
+  'medications': ?instance.medications,
+  'notes': ?instance.notes,
+  'attachments': ?instance.attachments,
+  'updatedAt': ?instance.updatedAt?.toIso8601String(),
+};
