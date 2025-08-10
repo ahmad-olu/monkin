@@ -3,6 +3,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart' show immutable;
+import 'package:utils/utils.dart';
 
 part 'appointment.g.dart';
 
@@ -39,6 +40,8 @@ class Appointment extends Equatable {
     this.reason,
     this.notes,
     this.reminderSent,
+    this.doctor,
+    this.patient,
   });
 
   @JsonKey(includeIfNull: false)
@@ -47,7 +50,8 @@ class Appointment extends Equatable {
   final String? patientId;
   @JsonKey(includeIfNull: false)
   final String? doctorId;
-  final DateTime appointmentDate;
+  final DateTime appointmentDate; // date and start time
+  @DurationConverter()
   final Duration duration;
   final AppointmentType? type;
   final AppointmentStatus? status;
@@ -56,6 +60,10 @@ class Appointment extends Equatable {
   final String? reminderSent;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  @JsonKey(includeIfNull: false)
+  final User? doctor;
+  @JsonKey(includeIfNull: false)
+  final Patient? patient;
 
   Appointment copyWith({
     String? id,
@@ -112,6 +120,50 @@ class Appointment extends Equatable {
       reminderSent,
       createdAt,
       updatedAt,
+      patient,
+      doctor,
     ];
   }
+}
+
+@immutable
+@JsonSerializable()
+class CreateAppointment {
+  const CreateAppointment({
+    required this.appointmentDate,
+    required this.duration,
+    required this.doctorEmail,
+    required this.patientEmail,
+    this.type,
+    this.status,
+    this.reason,
+    this.notes,
+    this.reminderSent,
+  });
+
+  final String patientEmail;
+  final String doctorEmail;
+  final DateTime appointmentDate; // date and start time
+  @DurationConverter()
+  final Duration duration;
+  final AppointmentType? type;
+  final AppointmentStatus? status;
+  final String? reason;
+  final String? notes;
+  final String? reminderSent;
+
+  factory CreateAppointment.fromJson(Map<String, dynamic> json) =>
+      _$CreateAppointmentFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CreateAppointmentToJson(this);
+}
+
+class DurationConverter implements JsonConverter<Duration, int> {
+  const DurationConverter();
+
+  @override
+  Duration fromJson(int milliseconds) => Duration(milliseconds: milliseconds);
+
+  @override
+  int toJson(Duration duration) => duration.inMilliseconds;
 }
