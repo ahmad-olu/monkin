@@ -20,10 +20,10 @@ class TreatmentPlan extends Equatable {
     required this.title,
     required this.description,
     required this.startDate,
-    required this.status,
     required this.goals,
     required this.medications,
     required this.instructions,
+    this.status,
     this.id,
     this.patientId,
     this.doctorId,
@@ -46,7 +46,7 @@ class TreatmentPlan extends Equatable {
   final String description;
   final DateTime startDate;
   final DateTime? endDate;
-  final TreatmentStatus status;
+  final TreatmentStatus? status;
   final List<String> goals;
   final List<String> medications;
   final List<String> instructions;
