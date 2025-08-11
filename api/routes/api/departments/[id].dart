@@ -1,9 +1,20 @@
-import 'package:dart_frog/dart_frog.dart';
+import 'dart:io';
 
-Response onRequest(
+import 'package:dart_frog/dart_frog.dart';
+import 'package:surrealdb/surrealdb.dart';
+
+import '../../../helper/get_user.dart';
+
+Future<Response> onRequest(
   RequestContext context,
   String id,
-) {
-  // TODO: implement route handler
-  return Response(body: 'This is a new route!');
+) async {
+  final sdb = await context.read<Future<SurrealDB>>();
+  final user = await getUser(context);
+
+  if (context.request.method == HttpMethod.post) {
+    return Response();
+  } else {
+    return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
 }
