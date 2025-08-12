@@ -20,6 +20,7 @@ Future<Response> onRequest(RequestContext context) async {
       await request.formData().then((e) => e.fields),
     );
 
+    // to-do: make email unique
     final checkUserQuery = await sdb
             .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
           'table': userTable,

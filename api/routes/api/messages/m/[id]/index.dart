@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:surrealdb/surrealdb.dart';
 
-import '../../../../helper/get_user.dart';
+import '../../../../../helper/get_user.dart';
 
 Future<Response> onRequest(
   RequestContext context,
