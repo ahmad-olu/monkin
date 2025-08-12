@@ -41,6 +41,8 @@ void main() {
     when(() => context.read<Future<SurrealDB>>()).thenAnswer((_) async => db);
   });
 
+  //tearDown(() async {});
+
   group('Authorization /api/', () {
     test('registration responds with a 201 created', () async {
       // Arrange
