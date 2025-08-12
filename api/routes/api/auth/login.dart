@@ -44,10 +44,15 @@ Future<Response> onRequest(RequestContext context) async {
       {
         'id': checkUser.first.id,
         'role': 'admin',
-        'exp': const Duration(hours: 1),
       },
+      subject: checkUser.first.id,
+      issuer: 'monkin',
+      audience: Audience.one('https://monkin.com'),
     );
-    final token = jwt.sign(SecretKey('secret passphrase'));
+    final token = jwt.sign(
+      SecretKey('secret passphrase'),
+      expiresIn: const Duration(hours: 1),
+    );
     // To-do: pass secret from .environment
     // To-do: Log successful login attempt
 
