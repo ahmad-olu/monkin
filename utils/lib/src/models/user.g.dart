@@ -10,7 +10,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   email: json['email'] as String,
   firstName: json['firstName'] as String,
   lastName: json['lastName'] as String,
-  createdBy: json['createdBy'] as String,
+  createdBy: json['createdBy'] as String?,
   passwordHash: json['passwordHash'] as String?,
   id: json['id'] as String?,
   role: $enumDecodeNullable(_$UserRoleEnumMap, json['role']),
@@ -55,7 +55,7 @@ CreateUser _$CreateUserFromJson(Map<String, dynamic> json) => CreateUser(
   isActive: json['isActive'] as bool,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
-  createdBy: json['createdBy'] as String,
+  createdBy: json['createdBy'] as String?,
   phone: json['phone'] as String?,
 );
 

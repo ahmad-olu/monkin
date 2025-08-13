@@ -21,7 +21,7 @@ class User extends Equatable {
     required this.email,
     required this.firstName,
     required this.lastName,
-    required this.createdBy,
+    this.createdBy,
     this.passwordHash,
     this.id,
     this.role,
@@ -33,7 +33,7 @@ class User extends Equatable {
 
   @JsonKey(includeIfNull: false)
   final String? id;
-  final String createdBy;
+  final String? createdBy;
   final String email;
   final String? passwordHash;
   final UserRole? role;
@@ -111,7 +111,7 @@ class CreateUser {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
-    required this.createdBy,
+    this.createdBy,
     this.phone,
   });
 
@@ -122,7 +122,7 @@ class CreateUser {
   final String lastName;
   final String? phone;
   final bool isActive;
-  final String createdBy;
+  final String? createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
 
