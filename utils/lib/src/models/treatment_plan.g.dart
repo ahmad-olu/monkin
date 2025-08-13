@@ -11,7 +11,6 @@ TreatmentPlan _$TreatmentPlanFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       description: json['description'] as String,
       startDate: DateTime.parse(json['startDate'] as String),
-      status: $enumDecode(_$TreatmentStatusEnumMap, json['status']),
       goals: (json['goals'] as List<dynamic>).map((e) => e as String).toList(),
       medications: (json['medications'] as List<dynamic>)
           .map((e) => e as String)
@@ -19,6 +18,7 @@ TreatmentPlan _$TreatmentPlanFromJson(Map<String, dynamic> json) =>
       instructions: (json['instructions'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      status: $enumDecodeNullable(_$TreatmentStatusEnumMap, json['status']),
       id: json['id'] as String?,
       patientId: json['patientId'] as String?,
       doctorId: json['doctorId'] as String?,
@@ -45,7 +45,7 @@ Map<String, dynamic> _$TreatmentPlanToJson(TreatmentPlan instance) =>
       'description': instance.description,
       'startDate': instance.startDate.toIso8601String(),
       'endDate': instance.endDate?.toIso8601String(),
-      'status': _$TreatmentStatusEnumMap[instance.status]!,
+      'status': _$TreatmentStatusEnumMap[instance.status],
       'goals': instance.goals,
       'medications': instance.medications,
       'instructions': instance.instructions,

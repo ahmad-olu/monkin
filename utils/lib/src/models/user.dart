@@ -7,6 +7,7 @@ import 'package:meta/meta.dart';
 part 'user.g.dart';
 
 enum UserRole {
+  superAdmin, // Can create other admins
   admin,
   doctor,
   nurse,
@@ -17,11 +18,12 @@ enum UserRole {
 @JsonSerializable()
 class User extends Equatable {
   const User({
-    required this.id,
     required this.email,
-    required this.passwordHash,
     required this.firstName,
     required this.lastName,
+    required this.createdBy,
+    this.passwordHash,
+    this.id,
     this.role,
     this.isActive,
     this.createdAt,
@@ -30,9 +32,10 @@ class User extends Equatable {
   });
 
   @JsonKey(includeIfNull: false)
-  final String id;
+  final String? id;
+  final String createdBy;
   final String email;
-  final String passwordHash;
+  final String? passwordHash;
   final UserRole? role;
   final String firstName;
   final String lastName;
@@ -43,6 +46,7 @@ class User extends Equatable {
 
   User copyWith({
     String? id,
+    String? createdBy,
     String? email,
     String? passwordHash,
     UserRole? role,
@@ -55,6 +59,7 @@ class User extends Equatable {
   }) {
     return User(
       id: id ?? this.id,
+      createdBy: createdBy ?? this.createdBy,
       email: email ?? this.email,
       passwordHash: passwordHash ?? this.passwordHash,
       role: role ?? this.role,
@@ -81,6 +86,7 @@ class User extends Equatable {
     return [
       id,
       email,
+      createdBy,
       passwordHash,
       role,
       firstName,
@@ -105,6 +111,7 @@ class CreateUser {
     required this.isActive,
     required this.createdAt,
     required this.updatedAt,
+    required this.createdBy,
     this.phone,
   });
 
@@ -115,6 +122,7 @@ class CreateUser {
   final String lastName;
   final String? phone;
   final bool isActive;
+  final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -130,16 +138,16 @@ class CreateUserRequest {
   const CreateUserRequest({
     required this.email,
     required this.password,
-    required this.role,
     required this.firstName,
     required this.lastName,
+    required this.role,
   });
 
   final String email;
   final String password;
-  final UserRole role;
   final String firstName;
   final String lastName;
+  final UserRole role;
 
   factory CreateUserRequest.fromJson(Map<String, dynamic> json) =>
       _$CreateUserRequestFromJson(json);

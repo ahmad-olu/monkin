@@ -35,7 +35,7 @@ Future<Response> onRequest(RequestContext context) async {
     }
 
     final checkPassword =
-        BCrypt.checkpw(password!, checkUser.first.passwordHash);
+        BCrypt.checkpw(password!, checkUser.first.passwordHash!);
     if (!checkPassword) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
