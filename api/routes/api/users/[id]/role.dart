@@ -28,7 +28,7 @@ Future<Response> _put(RequestContext context, String userId) async {
   try {
     final sdb = await context.read<Future<SurrealDB>>();
     final user = await getUser(context);
-    if (user.role != UserRole.admin || user.role != UserRole.superAdmin) {
+    if (user.role != UserRole.admin && user.role != UserRole.superAdmin) {
       return Response.json(
         statusCode: HttpStatus.unauthorized,
         body: {
@@ -37,7 +37,7 @@ Future<Response> _put(RequestContext context, String userId) async {
       );
     }
     final json = await context.request.json() as Map<String, dynamic>;
-    final role = UserRole.values.byName(json['role'] as String);
+    final role = json['role'] as UserRole;
 
     if (user.role == UserRole.admin &&
         (role == UserRole.admin || role == UserRole.superAdmin)) {

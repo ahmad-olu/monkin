@@ -13,6 +13,8 @@ import '../../../routes/api/auth/change_password.dart' as change_password_route;
 import '../../../routes/api/auth/login.dart' as login_route;
 import '../../../routes/api/auth/profile.dart' as profile_route;
 import '../../../routes/api/auth/register.dart' as register_route;
+import '../../../routes/api/users/[id]/activate.dart' as user_activate_route;
+import '../../../routes/api/users/[id]/role.dart' as user_role_route;
 
 class _MockRequestContext extends Mock implements RequestContext {}
 
@@ -212,8 +214,39 @@ void main() {
       final msg = body['msg'] as String;
       expect(msg, equals('user account updated'));
     });
-  });
 
-  // to-do: user activate
-  // to-do: user role
+    test('super admin activate non admin user responds with a 201 created',
+        () async {
+      when(() => context.read<Future<UserIdFromJwt>>())
+          .thenAnswer((_) async => UserIdFromJwt(id: adminId));
+      when(() => request.method).thenReturn(HttpMethod.put);
+
+      final response = await user_activate_route.onRequest(context, user1Id);
+
+      expect(response.statusCode, equals(HttpStatus.created));
+      final body = json.decode(await response.body()) as Map<String, dynamic>;
+      final msg = body['msg'] as String;
+      expect(msg, equals('user account status updated'));
+    });
+
+    test('super admin role non admin user responds with a 201 created',
+        () async {
+      when(() => context.read<Future<UserIdFromJwt>>())
+          .thenAnswer((_) async => UserIdFromJwt(id: adminId));
+      when(() => request.method).thenReturn(HttpMethod.put);
+
+      when(() => request.json()).thenAnswer(
+        (_) async => {
+          'role': UserRole.receptionist,
+        },
+      );
+
+      final response = await user_role_route.onRequest(context, user1Id);
+
+      expect(response.statusCode, equals(HttpStatus.created));
+      final body = json.decode(await response.body()) as Map<String, dynamic>;
+      final msg = body['msg'] as String;
+      expect(msg, equals('user status updated'));
+    });
+  });
 }

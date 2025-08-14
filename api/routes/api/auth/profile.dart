@@ -6,7 +6,6 @@ import 'package:utils/utils.dart';
 
 import '../../../consts/db_table.dart';
 import '../../../helper/get_user.dart';
-import '../../index.dart' hide User;
 
 Future<Response> onRequest(RequestContext context) async {
   switch (context.request.method) {

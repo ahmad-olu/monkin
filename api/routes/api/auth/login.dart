@@ -10,11 +10,24 @@ import 'package:utils/utils.dart';
 import '../../../consts/db_table.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  final request = context.request;
-  final sdb = await context.read<Future<SurrealDB>>();
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context);
+    case HttpMethod.get:
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  final method = request.method;
-  if (method == HttpMethod.post) {
+Future<Response> _post(RequestContext context) async {
+  try {
+    final request = context.request;
+    final sdb = await context.read<Future<SurrealDB>>();
+
     final form = await request.formData().then((e) => e.fields);
     final email = form['email'];
     final password = form['password'];
@@ -59,7 +72,7 @@ Future<Response> onRequest(RequestContext context) async {
     return Response(
       body: json.encode({'access_token': token, 'data': checkUser.first}),
     );
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
-
-  return Response(statusCode: HttpStatus.methodNotAllowed);
 }
