@@ -29,7 +29,6 @@ Future<Response> _post(RequestContext context) async {
   try {
     final sdb = await context.read<Future<SurrealDB>>();
     final user = await getUser(context);
-    print('---------> 1');
     if (user.role != UserRole.admin && user.role != UserRole.superAdmin) {
       return Response.json(
         statusCode: HttpStatus.unauthorized,
@@ -38,11 +37,9 @@ Future<Response> _post(RequestContext context) async {
         },
       );
     }
-    print('---------> 2');
     final form = CreateUserRequest.fromJson(
       await context.request.formData().then((e) => e.fields),
     );
-    print('---------> 3');
     if (user.role == UserRole.admin && form.role == UserRole.admin) {
       return Response.json(
         statusCode: HttpStatus.unauthorized,
@@ -51,7 +48,6 @@ Future<Response> _post(RequestContext context) async {
         },
       );
     }
-    print('---------> 4');
     // to-do: make email unique
     final checkUserQuery = await sdb
             .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
@@ -63,7 +59,7 @@ Future<Response> _post(RequestContext context) async {
       checkUserQuery[0] as Map<String, dynamic>,
       (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
-    print('---------> 5');
+
     final resultList = checkUser;
     if (resultList.isEmpty) {
       final passwordHash = BCrypt.hashpw(form.password, BCrypt.gensalt());
@@ -78,7 +74,7 @@ Future<Response> _post(RequestContext context) async {
         updatedAt: DateTime.now(),
         createdBy: user.id,
       );
-      print('---------> 6');
+
       await sdb
           .create(userTable, userData)
           .then((e) => User.fromJson(e as Map<String, dynamic>? ?? {}));
@@ -86,13 +82,12 @@ Future<Response> _post(RequestContext context) async {
       // To-do: Send welcome email with login credentials
       // To-do: Log user creation event
     }
-    print('---------> 7');
+
     return Response(
       statusCode: HttpStatus.created,
       body: json.encode({'msg': 'user created'}),
     );
   } catch (e) {
-    print('---------> 8');
     return Response(statusCode: HttpStatus.internalServerError);
   }
 }
