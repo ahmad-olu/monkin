@@ -34,6 +34,7 @@ class Patient extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.id,
+    this.createdBy,
     this.email,
     this.emergencyContactName,
     this.emergencyContactPhone,
@@ -46,6 +47,8 @@ class Patient extends Equatable {
 
   @JsonKey(includeIfNull: false)
   final String? id;
+  @JsonKey(includeIfNull: false)
+  final String? createdBy;
   final String patientNumber;
   final String firstName;
   final String lastName;
@@ -67,6 +70,7 @@ class Patient extends Equatable {
 
   Patient copyWith({
     String? id,
+    String? createdBy,
     String? patientNumber,
     String? firstName,
     String? lastName,
@@ -88,6 +92,7 @@ class Patient extends Equatable {
   }) {
     return Patient(
       id: id ?? this.id,
+      createdBy: createdBy ?? this.createdBy,
       patientNumber: patientNumber ?? this.patientNumber,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
@@ -124,6 +129,7 @@ class Patient extends Equatable {
   List<Object?> get props {
     return [
       id,
+      createdBy,
       patientNumber,
       firstName,
       lastName,
@@ -149,12 +155,12 @@ class Patient extends Equatable {
 @JsonSerializable()
 class UpdatePatient extends Equatable {
   const UpdatePatient({
-    required this.firstName,
-    required this.lastName,
-    required this.dateOfBirth,
-    required this.gender,
-    required this.phone,
-    required this.address,
+    this.firstName,
+    this.lastName,
+    this.dateOfBirth,
+    this.gender,
+    this.phone,
+    this.address,
     this.isActive,
     this.updatedAt,
     this.email,

@@ -22,6 +22,7 @@ Patient _$PatientFromJson(Map<String, dynamic> json) => Patient(
       ? null
       : DateTime.parse(json['updatedAt'] as String),
   id: json['id'] as String?,
+  createdBy: json['createdBy'] as String?,
   email: json['email'] as String?,
   emergencyContactName: json['emergencyContactName'] as String?,
   emergencyContactPhone: json['emergencyContactPhone'] as String?,
@@ -38,6 +39,7 @@ Patient _$PatientFromJson(Map<String, dynamic> json) => Patient(
 
 Map<String, dynamic> _$PatientToJson(Patient instance) => <String, dynamic>{
   'id': ?instance.id,
+  'createdBy': ?instance.createdBy,
   'patientNumber': instance.patientNumber,
   'firstName': instance.firstName,
   'lastName': instance.lastName,
