@@ -6,14 +6,45 @@ import 'package:surrealdb/surrealdb.dart';
 import 'package:utils/utils.dart';
 
 import '../../../consts/db_table.dart' show patientTable;
+import '../../../helper/get_user.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  // To-do: check permission
-  final sdb = await context.read<Future<SurrealDB>>();
-  final userId = await context.read<Future<UserIdFromJwt>>().then((e) => e.id);
-  // TO-do: Validate all required patient information
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context);
+    case HttpMethod.get:
+      return _get(context);
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.post) {
+Future<Response> _post(
+  RequestContext context,
+) async {
+  try {
+    // To-do: check permission
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
+
+    // TO-do: Validate all required patient information
     final newPatientRec = Patient.fromJson(
       await context.request.json() as Map<String, dynamic>,
     );
@@ -45,6 +76,7 @@ Future<Response> onRequest(RequestContext context) async {
     newPatientRec.copyWith(
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      createdBy: user.id,
       isActive: true,
     );
 
@@ -54,8 +86,31 @@ Future<Response> onRequest(RequestContext context) async {
 
     // To-do: Log patient creation event
 
-    return Response(statusCode: HttpStatus.created, body: json.encode(patient));
-  } else if (context.request.method == HttpMethod.get) {
+    return Response.json(statusCode: HttpStatus.created, body: patient);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
+  }
+}
+
+Future<Response> _get(
+  RequestContext context,
+) async {
+  try {
+    // To-do: check permission
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Parse query parameters for pagination, search, and filters
     // to-do: Build dynamic SQL query based on filters
     // to-do: Apply search across name, phone, email, and patient number
@@ -71,8 +126,8 @@ Future<Response> onRequest(RequestContext context) async {
       patientsRes[0] as Map<String, dynamic>,
       (json) => Patient.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
-    return Response(body: json.encode(patients));
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+    return Response.json(body: patients);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

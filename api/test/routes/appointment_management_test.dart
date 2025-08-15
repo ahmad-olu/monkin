@@ -8,13 +8,13 @@ import 'package:surrealdb/surrealdb.dart';
 import 'package:test/test.dart';
 import 'package:utils/utils.dart';
 
-import '../../../consts/db_table.dart';
-import '../../../routes/api/auth/change_password.dart' as change_password_route;
-import '../../../routes/api/auth/login.dart' as login_route;
-import '../../../routes/api/auth/profile.dart' as profile_route;
-import '../../../routes/api/auth/register.dart' as register_route;
-import '../../../routes/api/users/[id]/activate.dart' as user_activate_route;
-import '../../../routes/api/users/[id]/role.dart' as user_role_route;
+import '../../consts/db_table.dart';
+import '../../routes/api/auth/login.dart' as login_route;
+import '../../routes/api/auth/register.dart' as register_route;
+import '../../routes/api/appointments/index.dart' as appointments_route;
+import '../../routes/api/patients/index.dart' as patients_route;
+import '../../routes/api/appointments/[id]/status.dart'
+    as appointment_status_route;
 
 class _MockRequestContext extends Mock implements RequestContext {}
 
@@ -30,16 +30,16 @@ void main() {
   late String adminId;
   const adminEmail = 'super.admin@gmail.com';
   const adminPassword = 'myVeryVerySecurePassword23';
-  //const adminNewPassword = 'myVeryVerySecurePassword239';
 
   late String user1Id;
   const email = 'man.man@gmail.com';
   const password = 'myVerySecuredPassword';
-  const newPassword = 'myVerySecuredPassword22';
   const role = UserRole.doctor;
   const firstName = 'Johnny';
-  const newFirstName = 'mon';
   const lastName = 'dove';
+
+  late String patientId;
+  late String medicalRecordId;
 
   setUp(() async {
     context = _MockRequestContext();
@@ -63,6 +63,8 @@ void main() {
     await db.signin(user: 'root', pass: 'secret');
 
     await db.delete(userTable);
+    await db.delete(patientTable);
+    await db.delete(medicalRecordTable);
 
     final passwordHash = BCrypt.hashpw(adminPassword, BCrypt.gensalt());
     final admin = CreateUser(
@@ -80,15 +82,7 @@ void main() {
     ).id!;
   });
 
-  // tearDown(() async {
-  //   final db = SurrealDB('ws://localhost:8050/rpc')..connect();
-  //   await db.wait();
-  //   await db.use('test', 'test');
-  //   await db.signin(user: 'root', pass: 'secret');
-  //   await db.delete(userTable);
-  // });
-
-  group('Authorization /api/', () {
+  group('Medical record /api/', () {
     test('super admin login responds with a 200 created', () async {
       // Arrange
 
@@ -118,8 +112,6 @@ void main() {
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: adminId));
       when(() => request.method).thenReturn(HttpMethod.post);
-      // when(() => request.headers)
-      //     .thenReturn({'Authorization': 'Bearer $superAdminJwt'});
 
       final formData = FormData(
         fields: {
@@ -139,7 +131,6 @@ void main() {
 
       // Assert
       expect(response.statusCode, equals(HttpStatus.created));
-      //expect(response.body(), completion(equals('Hello World')));
     });
 
     test('non admin login responds with a 200 created', () async {
@@ -163,90 +154,106 @@ void main() {
       expect(response.statusCode, equals(HttpStatus.ok));
       final body = json.decode(await response.body()) as Map<String, dynamic>;
       final accessToken = body['access_token'] as String;
-      user1Id = body['data']['id'] as String;
+      user1Id = (body['data'] as Map)['id'] as String;
       expect(accessToken.isEmpty, equals(false));
     });
 
-    test('non admin change password responds with a 201 created', () async {
+    test('non admin add patient responds with a 201 created', () async {
+      // Arrange
+
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
-      when(() => request.method).thenReturn(HttpMethod.put);
-      const formData = FormData(
-        fields: {
-          'password': newPassword,
-          'confirm_password': newPassword,
-        },
-        files: {},
+      when(() => request.method).thenReturn(HttpMethod.post);
+      final data = Patient(
+        address: '9897, new address street, new address',
+        patientNumber: '', //number
+        firstName: 'malik',
+        lastName: 'monk',
+        dateOfBirth: DateTime(1987, 9, 7),
+        gender: Gender.male,
+        phone: '+2345869574889',
       );
-      when(() => request.formData()).thenAnswer((_) async => formData);
 
-      final response = await change_password_route.onRequest(context);
+      when(() => request.json()).thenAnswer((_) async => data.toJson());
 
+      // Act
+      final response = await patients_route.onRequest(context);
+
+      // Assert
+      expect(response.statusCode, equals(HttpStatus.created));
+      final body = json.decode(await response.body()) as Map<String, dynamic>;
+
+      final patientFirstName = body['firstName'] as String;
+      patientId = body['id'] as String;
+      expect(patientFirstName, equals('malik'));
+    });
+
+    test('non admin add patient medical record responds with a 201 created',
+        () async {
+      // Arrange
+
+      when(() => context.read<Future<UserIdFromJwt>>())
+          .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
+      when(() => request.method).thenReturn(HttpMethod.post);
+      final data = MedicalRecord(
+        chiefComplaint: '',
+        visitDate: DateTime.now(),
+        notes: 'medical notes',
+      );
+
+      when(() => request.json()).thenAnswer((_) async => data.toJson());
+
+      // Act
+      final response =
+          await patient_med_rec_route.onRequest(context, patientId);
+
+      // Assert
       expect(response.statusCode, equals(HttpStatus.created));
     });
 
-    test('non admin view profile responds with a 200 ok', () async {
+    test('non admin get patient medical records responds with a 200 ok',
+        () async {
+      // Arrange
+
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.get);
 
-      final response = await profile_route.onRequest(context);
+      // Act
+      final response =
+          await patient_med_rec_route.onRequest(context, patientId);
 
+      // Assert
       expect(response.statusCode, equals(HttpStatus.ok));
-      final body = json.decode(await response.body()) as Map<String, dynamic>;
-      final pEmail = body['email'] as String;
-      expect(pEmail, equals(email));
+      final body = json.decode(await response.body()) as List<dynamic>;
+      expect(body.isEmpty, equals(false));
+      final patients = body
+          .map((p) => MedicalRecord.fromJson(p as Map<String, dynamic>))
+          .toList();
+
+      expect(patients.first.notes, equals('medical notes'));
+      medicalRecordId = patients.first.id!;
     });
 
-    test('non admin update profile responds with a 201 created', () async {
+    test('non admin update patient medical record responds with a 201 created',
+        () async {
+      // Arrange
+
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.put);
-
-      when(() => request.json()).thenAnswer(
-        (_) async => {'firstName': newFirstName, 'phone': '+2349857566299'},
+      const data = UpdateMedicalRecord(
+        chiefComplaint: 'headache',
       );
 
-      final response = await profile_route.onRequest(context);
+      when(() => request.json()).thenAnswer((_) async => data.toJson());
 
+      // Act
+      final response =
+          await med_record_route.onRequest(context, medicalRecordId);
+
+      // Assert
       expect(response.statusCode, equals(HttpStatus.created));
-      final body = json.decode(await response.body()) as Map<String, dynamic>;
-      final msg = body['msg'] as String;
-      expect(msg, equals('user account updated'));
-    });
-
-    test('super admin activate non admin user responds with a 201 created',
-        () async {
-      when(() => context.read<Future<UserIdFromJwt>>())
-          .thenAnswer((_) async => UserIdFromJwt(id: adminId));
-      when(() => request.method).thenReturn(HttpMethod.put);
-
-      final response = await user_activate_route.onRequest(context, user1Id);
-
-      expect(response.statusCode, equals(HttpStatus.created));
-      final body = json.decode(await response.body()) as Map<String, dynamic>;
-      final msg = body['msg'] as String;
-      expect(msg, equals('user account status updated'));
-    });
-
-    test('super admin role non admin user responds with a 201 created',
-        () async {
-      when(() => context.read<Future<UserIdFromJwt>>())
-          .thenAnswer((_) async => UserIdFromJwt(id: adminId));
-      when(() => request.method).thenReturn(HttpMethod.put);
-
-      when(() => request.json()).thenAnswer(
-        (_) async => {
-          'role': UserRole.receptionist,
-        },
-      );
-
-      final response = await user_role_route.onRequest(context, user1Id);
-
-      expect(response.statusCode, equals(HttpStatus.created));
-      final body = json.decode(await response.body()) as Map<String, dynamic>;
-      final msg = body['msg'] as String;
-      expect(msg, equals('user status updated'));
     });
   });
 }

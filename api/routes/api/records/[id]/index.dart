@@ -12,11 +12,38 @@ Future<Response> onRequest(
   RequestContext context,
   String id,
 ) async {
-  // To-do: check permission
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.put:
+      return _put(context, id);
+    case HttpMethod.get:
+    case HttpMethod.post:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.put) {
+Future<Response> _put(
+  RequestContext context,
+  String medicalRecordId,
+) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Validate user has edit permissions
     final medicalRecordRec = UpdateMedicalRecord.fromJson(
       await context.request.json() as Map<String, dynamic>,
@@ -25,11 +52,13 @@ Future<Response> onRequest(
     // to-do: Track field-level changes for audit
     medicalRecordRec['updatedAt'] = DateTime.now().toIso8601String();
 
-    await sdb.update(medicalRecordTable, medicalRecordRec);
+    await sdb.merge(medicalRecordTable, medicalRecordRec);
     // to-do: Notify other healthcare providers of changes
 
-    return Response(body: json.encode({'msg': 'record modifies'}));
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+    return Response(
+        statusCode: HttpStatus.created,
+        body: json.encode({'msg': 'record modifies'}));
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }
