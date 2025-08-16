@@ -45,6 +45,7 @@ Future<Response> _put(RequestContext context, String appointmentId) async {
     final req = await context.request.json() as Map<String, dynamic>;
     final status = req['status'] as String;
 
+    // ignore: inference_failure_on_function_invocation
     final appointment = (await sdb.select(appointmentId))
         .map((u) => Appointment.fromJson(u as Map<String, dynamic>))
         .toList();

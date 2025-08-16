@@ -12,12 +12,40 @@ Future<Response> onRequest(
   RequestContext context,
   String id,
 ) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
-  final treatmentPlanId = id;
-  if (context.request.method == HttpMethod.put) {
+  switch (context.request.method) {
+    case HttpMethod.put:
+      return _put(context, id);
+    case HttpMethod.get:
+    case HttpMethod.post:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
+
+Future<Response> _put(
+  RequestContext context,
+  String treatmentPlanId,
+) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     final req = await context.request.json() as Map<String, dynamic>;
-    final status = TreatmentStatus.values.byName(req['status'] as String);
+    final status = req['status'] as TreatmentStatus;
     // to-do: Validate and user has permissions
     final treatmentPlanQuery = await sdb.query(
           r'''
@@ -25,7 +53,7 @@ Future<Response> onRequest(
           ''',
           {
             'table': treatmentPlanTable,
-            'id': id,
+            'id': treatmentPlanId,
           },
         ) as List? ??
         [];
@@ -43,11 +71,11 @@ Future<Response> onRequest(
           body: json.encode({'msg': 'cant change a cancelled treatment plan'}));
     }
 
-    final updatedTreatment =
+    var updatedTreatment =
         treatmentPlan.first.copyWith(status: status, updatedAt: DateTime.now());
     if (status == TreatmentStatus.completed ||
         status == TreatmentStatus.cancelled) {
-      updatedTreatment.copyWith(endDate: DateTime.now());
+      updatedTreatment = updatedTreatment.copyWith(endDate: DateTime.now());
     }
 
     await sdb.update(treatmentPlanId, updatedTreatment.toJson());
@@ -55,7 +83,7 @@ Future<Response> onRequest(
     // to-do: Update related appointment statuses if needed
     // to-do: Generate treatment summary report
     return Response(statusCode: HttpStatus.created);
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }
