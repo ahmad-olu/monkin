@@ -9,14 +9,39 @@ import '../../../consts/db_table.dart';
 import '../../../helper/get_user.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context);
+    case HttpMethod.get:
+      return _get(context);
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.post) {
+Future<Response> _post(
+  RequestContext context,
+) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     final appointmentRec = CreateAppointment.fromJson(
       await context.request.json() as Map<String, dynamic>,
     );
-
     // ? check patient
     final checkPatientQuery = await sdb.query(
           r'SELECT * FROM type::table($table) WHERE email = $email;',
@@ -30,16 +55,14 @@ Future<Response> onRequest(RequestContext context) async {
       checkPatientQuery[0] as Map<String, dynamic>,
       (json) => Patient.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
-
     if (checkPatient.isEmpty) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
-
     // ? check doctor
     final checkDoctorQuery = await sdb.query(
           r'SELECT * FROM type::table($table) WHERE email = $email;',
           {
-            'table': patientTable,
+            'table': userTable,
             'email': appointmentRec.doctorEmail,
           },
         ) as List? ??
@@ -48,28 +71,29 @@ Future<Response> onRequest(RequestContext context) async {
       checkDoctorQuery[0] as Map<String, dynamic>,
       (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
-
     if (checkDoctor.isEmpty) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
-
     // ? check availability
     final checkDoctorAvailabilityQuery = await sdb.query(
           r'''
     SELECT * FROM type::table($table)   
     WHERE doctorId = $doctorId
     AND (
-      (appointmentDate <= $requestedEndTime AND date::add(appointmentDate, duration) >= $requestedStartTime)
+      (appointmentDate <= $requestedEndTime AND (appointmentDate + duration) >= $requestedStartTime)
     )''',
           {
             'table': appointmentTable,
             'doctorId': checkDoctor.first.id,
-            'requestedStartTime': appointmentRec.appointmentDate,
-            'requestedEndTime':
-                appointmentRec.appointmentDate.add(appointmentRec.duration),
+            'requestedStartTime':
+                appointmentRec.appointmentDate.toIso8601String(),
+            'requestedEndTime': appointmentRec.appointmentDate
+                .add(appointmentRec.duration)
+                .toIso8601String(),
           },
         ) as List? ??
         [];
+
     final checkDoctorAvailability = SurrealQueryResult<User>.fromJson(
       checkDoctorAvailabilityQuery[0] as Map<String, dynamic>,
       (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
@@ -96,11 +120,38 @@ Future<Response> onRequest(RequestContext context) async {
       reminderSent: appointmentRec.reminderSent,
       status: AppointmentStatus.scheduled,
     );
+
     await sdb.create(appointmentTable, appointmentData.toJson());
     // to-do: Send confirmation notifications to patient and doctor
     // to-do: Add to doctor's calendar
-    return Response(body: json.encode({'msg': 'appointment scheduled'}));
-  } else if (context.request.method == HttpMethod.get) {
+
+    return Response.json(
+      statusCode: HttpStatus.created,
+      body: {'msg': 'appointment scheduled'},
+    );
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
+  }
+}
+
+Future<Response> _get(
+  RequestContext context,
+) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Parse date range, status, and user filters
     // to-do: Apply role-based filtering (doctors see their appointments)
     // to-do: attach patient/doctor info to appointments
@@ -117,8 +168,8 @@ Future<Response> onRequest(RequestContext context) async {
       appointmentsQuery[0] as Map<String, dynamic>,
       (json) => Appointment.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
-    return Response(body: json.encode(appointments));
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+    return Response.json(body: appointments);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

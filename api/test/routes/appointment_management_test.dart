@@ -9,12 +9,12 @@ import 'package:test/test.dart';
 import 'package:utils/utils.dart';
 
 import '../../consts/db_table.dart';
-import '../../routes/api/auth/login.dart' as login_route;
-import '../../routes/api/auth/register.dart' as register_route;
-import '../../routes/api/appointments/index.dart' as appointments_route;
-import '../../routes/api/patients/index.dart' as patients_route;
 import '../../routes/api/appointments/[id]/status.dart'
     as appointment_status_route;
+import '../../routes/api/appointments/index.dart' as appointments_route;
+import '../../routes/api/auth/login.dart' as login_route;
+import '../../routes/api/auth/register.dart' as register_route;
+import '../../routes/api/patients/index.dart' as patients_route;
 
 class _MockRequestContext extends Mock implements RequestContext {}
 
@@ -39,7 +39,7 @@ void main() {
   const lastName = 'dove';
 
   late String patientId;
-  late String medicalRecordId;
+  late String appointmentId;
 
   setUp(() async {
     context = _MockRequestContext();
@@ -64,7 +64,7 @@ void main() {
 
     await db.delete(userTable);
     await db.delete(patientTable);
-    await db.delete(medicalRecordTable);
+    await db.delete(appointmentTable);
 
     final passwordHash = BCrypt.hashpw(adminPassword, BCrypt.gensalt());
     final admin = CreateUser(
@@ -82,7 +82,7 @@ void main() {
     ).id!;
   });
 
-  group('Medical record /api/', () {
+  group('Appointment Management record /api/appointments', () {
     test('super admin login responds with a 200 created', () async {
       // Arrange
 
@@ -165,14 +165,14 @@ void main() {
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.post);
       final data = Patient(
-        address: '9897, new address street, new address',
-        patientNumber: '', //number
-        firstName: 'malik',
-        lastName: 'monk',
-        dateOfBirth: DateTime(1987, 9, 7),
-        gender: Gender.male,
-        phone: '+2345869574889',
-      );
+          address: '9897, new address street, new address',
+          patientNumber: '', //number
+          firstName: 'malik',
+          lastName: 'monk',
+          dateOfBirth: DateTime(1987, 9, 7),
+          gender: Gender.male,
+          phone: '+2345869574889',
+          email: 'opatient1@gmail.com');
 
       when(() => request.json()).thenAnswer((_) async => data.toJson());
 
@@ -180,79 +180,62 @@ void main() {
       final response = await patients_route.onRequest(context);
 
       // Assert
-      expect(response.statusCode, equals(HttpStatus.created));
       final body = json.decode(await response.body()) as Map<String, dynamic>;
-
-      final patientFirstName = body['firstName'] as String;
       patientId = body['id'] as String;
-      expect(patientFirstName, equals('malik'));
+      expect(response.statusCode, equals(HttpStatus.created));
     });
 
-    test('non admin add patient medical record responds with a 201 created',
-        () async {
-      // Arrange
-
+    test('non admin create appointment responds with a 201 created', () async {
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.post);
-      final data = MedicalRecord(
-        chiefComplaint: '',
-        visitDate: DateTime.now(),
-        notes: 'medical notes',
+      final data = CreateAppointment(
+        appointmentDate: DateTime.now().add(const Duration(days: 15)),
+        duration: const Duration(minutes: 15),
+        doctorEmail: email,
+        patientEmail: 'opatient1@gmail.com',
+        type: AppointmentType.consultation,
       );
 
       when(() => request.json()).thenAnswer((_) async => data.toJson());
 
-      // Act
-      final response =
-          await patient_med_rec_route.onRequest(context, patientId);
+      final response = await appointments_route.onRequest(context);
 
-      // Assert
       expect(response.statusCode, equals(HttpStatus.created));
     });
 
-    test('non admin get patient medical records responds with a 200 ok',
-        () async {
-      // Arrange
-
+    test('non admin get all appointment responds with a 201 created', () async {
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.get);
 
-      // Act
-      final response =
-          await patient_med_rec_route.onRequest(context, patientId);
+      final response = await appointments_route.onRequest(context);
 
-      // Assert
       expect(response.statusCode, equals(HttpStatus.ok));
       final body = json.decode(await response.body()) as List<dynamic>;
       expect(body.isEmpty, equals(false));
       final patients = body
-          .map((p) => MedicalRecord.fromJson(p as Map<String, dynamic>))
+          .map((p) => Appointment.fromJson(p as Map<String, dynamic>))
           .toList();
-
-      expect(patients.first.notes, equals('medical notes'));
-      medicalRecordId = patients.first.id!;
+      appointmentId = patients.first.id!;
+      expect(patients.first.patientId, equals(patientId));
     });
 
-    test('non admin update patient medical record responds with a 201 created',
+    test('non admin view  single appointment responds with a 201 created',
         () async {
-      // Arrange
-
       when(() => context.read<Future<UserIdFromJwt>>())
           .thenAnswer((_) async => UserIdFromJwt(id: user1Id));
       when(() => request.method).thenReturn(HttpMethod.put);
-      const data = UpdateMedicalRecord(
-        chiefComplaint: 'headache',
+
+      when(() => request.json()).thenAnswer(
+        (_) async => {
+          'status': AppointmentStatus.completed.name,
+        },
       );
 
-      when(() => request.json()).thenAnswer((_) async => data.toJson());
-
-      // Act
       final response =
-          await med_record_route.onRequest(context, medicalRecordId);
+          await appointment_status_route.onRequest(context, appointmentId);
 
-      // Assert
       expect(response.statusCode, equals(HttpStatus.created));
     });
   });

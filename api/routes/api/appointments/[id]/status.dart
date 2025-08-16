@@ -12,16 +12,42 @@ Future<Response> onRequest(
   RequestContext context,
   String id,
 ) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.put:
+      return _put(context, id);
+    case HttpMethod.get:
+    case HttpMethod.post:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.put) {
-    // to-do: Validate user has permissions
-    final appointmentId = id;
+Future<Response> _put(RequestContext context, String appointmentId) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
+
     final req = await context.request.json() as Map<String, dynamic>;
     final status = req['status'] as String;
 
-    final appointment = await sdb.select<Appointment>(appointmentId);
+    final appointment = (await sdb.select(appointmentId))
+        .map((u) => Appointment.fromJson(u as Map<String, dynamic>))
+        .toList();
     if (appointment.isEmpty) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
@@ -40,7 +66,7 @@ Future<Response> onRequest(
     // to-do: Update calendar entries accordingly
     // to-do: Log status change for reporting
     return Response(statusCode: HttpStatus.created);
-  } else {
+  } catch (e) {
     return Response(statusCode: HttpStatus.methodNotAllowed);
   }
 }
