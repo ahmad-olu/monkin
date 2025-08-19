@@ -11,10 +11,35 @@ Future<Response> onRequest(
   RequestContext context,
   String id,
 ) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.delete:
+      return _delete(context, id);
+    case HttpMethod.get:
+    case HttpMethod.put:
+    case HttpMethod.post:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.delete) {
+Future<Response> _delete(RequestContext context, String id) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     final doctorDepartmentId = id;
     // to-do: Validate assignment exists and user has permissions
     final doctorDepartmentQuery = await sdb.query(
@@ -49,7 +74,7 @@ Future<Response> onRequest(
     await sdb.delete(doctorDepartmentId);
 
     return Response();
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

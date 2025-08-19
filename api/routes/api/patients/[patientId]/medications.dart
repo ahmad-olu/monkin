@@ -13,11 +13,36 @@ Future<Response> onRequest(
   RequestContext context,
   String patientId,
 ) async {
-  // To-do: check permission
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context, patientId);
+    case HttpMethod.get:
+      return _get(context, patientId);
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.post) {
+Future<Response> _post(RequestContext context, String patientId) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Verify doctor has prescribing rights
     final patients = await doesPatientWithIdExist(sdb, patientId);
 
@@ -65,7 +90,27 @@ Future<Response> onRequest(
       statusCode: HttpStatus.created,
       body: {'msg': 'patient medication created'},
     );
-  } else if (context.request.method == HttpMethod.get) {
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
+  }
+}
+
+Future<Response> _get(RequestContext context, String patientId) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Verify user has permission to view patient medications
     // to-do: Query active and historical prescriptions
     // to-do: Include medication details and prescribing doctor info
@@ -105,7 +150,7 @@ Future<Response> onRequest(
     ).result;
 
     return Response.json(body: medication);
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

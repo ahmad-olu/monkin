@@ -9,8 +9,11 @@ Future<Response> onRequest(
   RequestContext context,
   String id,
 ) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  final _ = await context.read<Future<SurrealDB>>();
+  final __ = await getUser(context);
+
+  // ignore: lines_longer_than_80_chars
+  // to-do: get medication details (get )update medication (put) and deactivate medication (delete)
 
   if (context.request.method == HttpMethod.post) {
     return Response();

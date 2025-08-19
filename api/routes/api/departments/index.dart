@@ -8,10 +8,36 @@ import '../../../consts/db_table.dart';
 import '../../../helper/get_user.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context);
+    case HttpMethod.get:
+      return _get(context);
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.post) {
+Future<Response> _post(RequestContext context) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     final req = Department.fromJson(
       await context.request.json() as Map<String, dynamic>,
     );
@@ -43,7 +69,27 @@ Future<Response> onRequest(RequestContext context) async {
     // to-do: Notify relevant administrators
 
     return Response.json(statusCode: HttpStatus.created);
-  } else if (context.request.method == HttpMethod.get) {
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
+  }
+}
+
+Future<Response> _get(RequestContext context) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do: Query active departments with optional filters
     // to-do: Include head of department information
     // to-do: Count assigned doctors per department
@@ -66,7 +112,7 @@ Future<Response> onRequest(RequestContext context) async {
     ).result;
 
     return Response.json(body: medication);
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

@@ -10,10 +10,35 @@ import '../../../helper/get_user.dart';
 import '../../../helper/patient_exist.dart';
 
 Future<Response> onRequest(RequestContext context) async {
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  switch (context.request.method) {
+    case HttpMethod.post:
+      return _post(context);
+    case HttpMethod.get:
+    case HttpMethod.put:
+    case HttpMethod.delete:
+    case HttpMethod.head:
+    case HttpMethod.options:
+    case HttpMethod.patch:
+      return Response(statusCode: HttpStatus.methodNotAllowed);
+  }
+}
 
-  if (context.request.method == HttpMethod.post) {
+Future<Response> _post(RequestContext context) async {
+  try {
+    final sdb = await context.read<Future<SurrealDB>>();
+    final user = await getUser(context);
+    if (user.role != UserRole.admin &&
+        user.role != UserRole.superAdmin &&
+        user.role != UserRole.doctor &&
+        user.role != UserRole.nurse &&
+        user.role != UserRole.receptionist) {
+      return Response.json(
+        statusCode: HttpStatus.unauthorized,
+        body: {
+          'msg': 'you dont have the right privilege to perform this task',
+        },
+      );
+    }
     // to-do:Validate sender has permission to send messages
 
     final messageRec = Message.fromJson(
@@ -58,7 +83,7 @@ Future<Response> onRequest(RequestContext context) async {
     }
 
     return Response(statusCode: HttpStatus.created);
-  } else {
-    return Response(statusCode: HttpStatus.methodNotAllowed);
+  } catch (e) {
+    return Response(statusCode: HttpStatus.internalServerError);
   }
 }

@@ -10,8 +10,9 @@ Future<Response> onRequest(
   String patientId,
 ) async {
   // To-do: check permission
-  final sdb = await context.read<Future<SurrealDB>>();
-  final user = await getUser(context);
+  final _ = await context.read<Future<SurrealDB>>();
+  final __ = await getUser(context);
+  // to-do: patient appointment (get)
 
   if (context.request.method == HttpMethod.post) {
     return Response();
