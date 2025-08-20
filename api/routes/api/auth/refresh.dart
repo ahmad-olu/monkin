@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:bcrypt/bcrypt.dart';
 import 'package:dart_frog/dart_frog.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:surrealdb/surrealdb.dart';
@@ -28,28 +26,28 @@ Future<Response> _post(RequestContext context) async {
     final request = context.request;
     final sdb = await context.read<Future<SurrealDB>>();
 
-    final form = await request.formData().then((e) => e.fields);
-    final email = form['email'];
-    final password = form['password'];
+    final json = await request.json() as Map<String, dynamic>;
+    final reqRefreshToken = json['refresh_token'] as String?;
 
-    final checkUserQuery = await sdb
-            .query(r'SELECT * FROM type::table($table) WHERE email = $email;', {
-          'table': userTable,
-          'email': email,
-        }) as List? ??
-        [];
+    if (reqRefreshToken == null) {
+      return Response(statusCode: HttpStatus.badRequest);
+    }
+
+    final payload = JWT.verify(reqRefreshToken, SecretKey('secret passphrase'));
+    final payloadData = payload.payload as Map<String, dynamic>;
+    final id = payloadData['id'] as String;
+    final checkUserQuery =
+        await sdb.query(r'SELECT * FROM type::table($table) WHERE id = $id;', {
+              'table': userTable,
+              'id': id,
+            }) as List? ??
+            [];
     final checkUser = SurrealQueryResult<User>.fromJson(
       checkUserQuery[0] as Map<String, dynamic>,
       (json) => User.fromJson((json as Map<String, dynamic>?) ?? {}),
     ).result;
 
     if (checkUser.isEmpty) {
-      return Response(statusCode: HttpStatus.unauthorized);
-    }
-
-    final checkPassword =
-        BCrypt.checkpw(password!, checkUser.first.passwordHash!);
-    if (!checkPassword) {
       return Response(statusCode: HttpStatus.internalServerError);
     }
 
@@ -74,14 +72,12 @@ Future<Response> _post(RequestContext context) async {
     // To-do: pass secret from .environment
     // To-do: Log successful login attempt
 
-    return Response(
-      body: json.encode(
-        {
-          'access_token': accessToken,
-          'refresh_token': refreshToken,
-          'data': checkUser.first,
-        },
-      ),
+    return Response.json(
+      body: {
+        'access_token': accessToken,
+        'refresh_token': refreshToken,
+        'data': checkUser.first,
+      },
     );
   } catch (e) {
     return Response(statusCode: HttpStatus.internalServerError);
