@@ -705,7 +705,7 @@ packages:
     source: hosted
     version: "0.28.0"
   shared_preferences:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shared_preferences
       sha256: "6e8bf70b7fef813df4e9a36f658ac46d107db4b4cfe1048b477d4e453a8159f5"
@@ -760,14 +760,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.1"
-  shared_prefs:
-    dependency: "direct main"
-    description:
-      name: shared_prefs
-      sha256: "1f31abdea8db4558059fe0db72db4d7233054018d8d5e91e1fecc63e52ee0d6c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   shelf:
     dependency: transitive
     description:
@@ -932,6 +924,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.2"
+  water_drop_nav_bar:
+    dependency: "direct main"
+    description:
+      name: water_drop_nav_bar
+      sha256: "65e71c836445f44d63acbc83b1d81f0df74166f95d53c02f9faeb41cc4a2dcb6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
   weak_map:
     dependency: transitive
     description:

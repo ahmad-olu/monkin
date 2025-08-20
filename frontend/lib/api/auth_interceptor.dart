@@ -48,20 +48,24 @@ class AuthResponseInterceptor implements Interceptor {
 
     var response = await chain.proceed(request);
 
-    if (response.statusCode == 401) {
-      final bool isRefreshed = await _refreshToken();
-      if (!isRefreshed) {
-        throw Exception('Token expired');
-      }
+    final path = chain.request.url.toString();
+    if (!path.endsWith('/api/auth/register')) {
+      if (response.statusCode == 401) {
+        final bool isRefreshed = await _refreshToken();
+        if (!isRefreshed) {
+          throw Exception('Token expired');
+        }
 
-      final retryRequest = applyHeader(
-        chain.request,
-        'Authorization',
-        await _token().then((t) => t.$1),
-        override: true,
-      );
-      response = await chain.proceed(retryRequest);
+        final retryRequest = applyHeader(
+          chain.request,
+          'Authorization',
+          await _token().then((t) => t.$1),
+          override: true,
+        );
+        response = await chain.proceed(retryRequest);
+      }
     }
+
     return response;
   }
 
